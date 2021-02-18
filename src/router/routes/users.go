@@ -30,9 +30,8 @@ var userRoutes = []Routes{
 		Handler:     controllers.UpdateUser,
 		RequireAuth: false,
 	},
-
 	{
-		URI:         "/users/{userID}",
+		URI:         "/users/{userId}",
 		Method:      http.MethodDelete,
 		Handler:     controllers.DeleteUser,
 		RequireAuth: false,
