@@ -1,10 +1,45 @@
 package controllers
 
-import "net/http"
+import (
+	"api/src/database"
+	"api/src/errors"
+	"api/src/models"
+	"api/src/presentation"
+	"api/src/repositories"
+	"encoding/json"
+	"io/ioutil"
+	"net/http"
+)
 
-// CreateUser method to create user and returns an User
+// CreateUser method to calls user repositories and returns an User
 func CreateUser(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Criando um usuário"))
+	requestBody, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		errors.Err(w, http.StatusUnprocessableEntity, err)
+		return
+	}
+
+	var user models.User
+
+	if err = json.Unmarshal(requestBody, &user); err != nil {
+		errors.Err(w, http.StatusBadRequest, err)
+		return
+	}
+
+	db, err := database.Connect()
+	if err != nil {
+		errors.Err(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	repositorie := repositories.NewUserRepositorie(db)
+	user.ID, err = repositorie.Create(user)
+	if err != nil {
+		errors.Err(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	presentation.JSON(w, http.StatusCreated, user)
 }
 
 // ListUsers List all users
