@@ -16,10 +16,8 @@ type Routes struct {
 
 // ConfigRoutes Config routes in Router
 func ConfigRoutes(r *mux.Router) *mux.Router {
-	routes := userRoutes
-
-	for _, route := range routes {
-		r.HandleFunc(route.URI, route.Handler)
+	for _, route := range userRoutes {
+		r.HandleFunc(route.URI, route.Handler).Methods(route.Method)
 	}
 
 	return r
