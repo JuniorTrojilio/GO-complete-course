@@ -3,6 +3,7 @@ package repositories
 import (
 	"api/src/models"
 	"database/sql"
+	"fmt"
 )
 
 // Users representes a user repositorie
@@ -48,4 +49,71 @@ func (u Users) Create(user models.User) (uint64, error) {
 	}
 
 	return uint64(lastInsertID), nil
+}
+
+// List get all users on database and get per filter too
+func (u Users) List(nameOrNick string) ([]models.User, error) {
+	nameOrNick = fmt.Sprintf("%%%s%%", nameOrNick)
+
+	db, err := (u.db.Query(
+		`SELECT 
+      id, 
+      name, 
+      nick, 
+      email, 
+      createat 
+  from users 
+  where name LIKE ? or nick LIKE ?`,
+		nameOrNick,
+		nameOrNick,
+	))
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer db.Close()
+
+	var users []models.User
+
+	for db.Next() {
+		var user models.User
+		if err = db.Scan(
+			&user.ID,
+			&user.Name,
+			&user.Nick,
+			&user.Email,
+			&user.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+
+	return users, nil
+}
+
+// GetUserByID returns an user based on ID
+func (u Users) GetUserByID(userID uint64) (models.User, error) {
+	var user models.User
+
+	db, err := (u.db.Query(
+		`SELECT 
+      id, 
+      name, 
+      nick, 
+      email, 
+      createat 
+  from users 
+  where id = ?`,
+		userID,
+	))
+
+	if err != nil {
+		return models.User{}, err
+	}
+
+	defer db.Close()
+
+	return user, nil
 }
