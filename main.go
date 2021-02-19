@@ -12,5 +12,5 @@ func main() {
 	config.Load()
 	fmt.Printf("Server started in http://localhost:%d\n", config.PORT)
 	r := router.Generate()
-	log.Fatal(http.ListenAndServe(":5000", r))
+	log.Fatal(http.ListenAndServe(":"+fmt.Sprint(config.PORT), r))
 }
