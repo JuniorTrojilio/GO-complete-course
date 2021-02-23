@@ -57,13 +57,13 @@ func (u Users) List(nameOrNick string) ([]models.User, error) {
 
 	db, err := (u.db.Query(
 		`SELECT 
-      id, 
-      name, 
-      nick, 
-      email, 
-      createat 
-  from users 
-  where name LIKE ? or nick LIKE ?`,
+			id, 
+			name, 
+			nick, 
+			email, 
+			createat 
+		from users 
+		where name LIKE ? or nick LIKE ?`,
 		nameOrNick,
 		nameOrNick,
 	))
@@ -95,8 +95,6 @@ func (u Users) List(nameOrNick string) ([]models.User, error) {
 
 // GetUserByID returns an user based on ID
 func (u Users) GetUserByID(userID uint64) (models.User, error) {
-	var user models.User
-
 	db, err := (u.db.Query(
 		`SELECT 
       id, 
@@ -104,8 +102,8 @@ func (u Users) GetUserByID(userID uint64) (models.User, error) {
       nick, 
       email, 
       createat 
-  from users 
-  where id = ?`,
+		from users 
+		where id = ?`,
 		userID,
 	))
 
@@ -115,5 +113,42 @@ func (u Users) GetUserByID(userID uint64) (models.User, error) {
 
 	defer db.Close()
 
+	var user models.User
+
+	if db.Next() {
+		if err = db.Scan(
+			&user.ID,
+			&user.Name,
+			&user.Nick,
+			&user.Email,
+			&user.CreatedAt,
+		); err != nil {
+			return models.User{}, err
+		}
+	}
+
 	return user, nil
+}
+
+// UpdateUserByID update an user by ID, but not update key
+func (u Users) UpdateUserByID(userID uint64, user models.User) error {
+	statement, err := u.db.Prepare(
+		`UPDATE users set
+			name = ?, 
+			nick = ?, 
+			email = ?, 
+		where id = ?`,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	defer statement.Close()
+
+	if _, err = statement.Exec(user.Name, user.Nick, user.Email, userID); err != nil {
+		return err
+	}
+
+	return nil
 }
